@@ -143,19 +143,67 @@ El STM32F051 (Cortex-M0) no tiene FPU de hardware. Esto implica:
 
 ---
 
-## 7. Trama de datos actual (Bluetooth UART)
-Formato (una linea por segundo):
+## 7. Estructura de trama de datos (Bluetooth UART)
+### 7.1 Trama enviada por UART (cada 1 s)
+Formato real en firmware (CSV, 13 campos, termina en salto de linea `\n`):
 
-`HS_X10:<int>,HS_ADC:<int>,LLD:<0/1>,LLA_X10:<int>,LLA_ADC:<int>,TA_X10:<int>,HA_X10:<int>,AX:<int>,AY:<int>,AZ:<int>,GX:<int>,GY:<int>,GZ:<int>`
+`<HS_X10>,<HS_ADC>,<LLD>,<LLA_X10>,<LLA_ADC>,<TA_X10>,<HA_X10>,<AX>,<AY>,<AZ>,<GX>,<GY>,<GZ>\n`
 
-Ejemplo:
+Cadena `snprintf` real:
 
-`HS_X10:61,HS_ADC:3846,LLD:0,LLA_X10:125,LLA_ADC:3842,TA_X10:222,HA_X10:585,AX:8500,AY:1500,AZ:-13200,GX:-50,GY:140,GZ:-160`
+`"%d,%u,%lu,%d,%u,%d,%d,%d,%d,%d,%d,%d,%d\n"`
 
-Interpretacion:
-- `HS_X10=61` -> 6.1%
-- `TA_X10=222` -> 22.2 C
-- `HA_X10=585` -> 58.5%
+| Pos | Campo   | Tipo | Escala / rango esperado | Descripcion |
+|---|---|---|---|---|
+| 1 | `HS_X10` | `int` | `% suelo * 10` | Humedad de suelo escalada (ej. `610` = `61.0%`). |
+| 2 | `HS_ADC` | `uint` | `0..4095` | ADC crudo de humedad de suelo. |
+| 3 | `LLD` | `uint32` | `0` o `1` | Lluvia digital activa (`1` = lluvia detectada). |
+| 4 | `LLA_X10` | `int` | `% agua calibrado * 10` | Nivel de agua de lluvia AO calibrado (ej. `125` = `12.5%`). |
+| 5 | `LLA_ADC` | `uint` | `0..4095` | ADC crudo de lluvia AO. |
+| 6 | `TA_X10` | `int` | `C * 10` (con signo) | Temperatura ambiente escalada (ej. `222` = `22.2C`, `-30` = `-3.0C`). |
+| 7 | `HA_X10` | `int` | `%RH * 10` | Humedad ambiente escalada (ej. `585` = `58.5%`). |
+| 8 | `AX` | `int` | `int16` | Aceleracion X del MPU6050 (crudo). |
+| 9 | `AY` | `int` | `int16` | Aceleracion Y del MPU6050 (crudo). |
+| 10 | `AZ` | `int` | `int16` | Aceleracion Z del MPU6050 (crudo). |
+| 11 | `GX` | `int` | `int16` | Giroscopio X del MPU6050 (crudo). |
+| 12 | `GY` | `int` | `int16` | Giroscopio Y del MPU6050 (crudo). |
+| 13 | `GZ` | `int` | `int16` | Giroscopio Z del MPU6050 (crudo). |
+
+Ejemplo de linea:
+
+`610,3846,0,125,3842,-30,585,8500,1500,-13200,-50,140,-160`
+
+Interpretacion rapida:
+- `HS_X10=610` -> `61.0%` de humedad de suelo.
+- `TA_X10=-30` -> `-3.0C`.
+- `HA_X10=585` -> `58.5%` de humedad ambiente.
+
+Nota:
+- La trama UART actual no incluye encabezado, version, ni checksum; solo CSV + `\n`.
+
+### 7.2 Trama cruda del DHT22 (40 bits = 5 bytes)
+Antes de armar la trama UART, el DHT22 entrega 5 bytes:
+
+| Byte | Contenido |
+|---|---|
+| `datos[0]` | Humedad alta |
+| `datos[1]` | Humedad baja |
+| `datos[2]` | Temperatura alta (7 bits) + bit de signo (bit 7) |
+| `datos[3]` | Temperatura baja |
+| `datos[4]` | Checksum (`datos[0] + datos[1] + datos[2] + datos[3]`, 8 bits) |
+
+Decodificacion usada en firmware:
+- `hum_cruda = (datos[0] << 8) | datos[1]`
+- `humedad_ambiente_pct = hum_cruda / 10.0`
+- `temp_cruda = ((datos[2] & 0x7F) << 8) | datos[3]`
+- `temperatura_ambiente_c = temp_cruda / 10.0`
+- Si `(datos[2] & 0x80) != 0`, la temperatura se vuelve negativa.
+
+Ejemplo para `-3.0C`:
+- Magnitud `3.0C` -> `30` en escala x10 (`0x001E`).
+- Se activa bit de signo en `datos[2]`.
+- Valores tipicos: `datos[2] = 0x80`, `datos[3] = 0x1E`.
+- Resultado final en UART: `TA_X10 = -30`.
 
 ---
 
@@ -180,4 +228,3 @@ Interpretacion:
 3. Implementar checksum de trama o delimitador robusto.
 4. Agregar timestamp y/o ID de nodo.
 5. Mover logica final de alerta al cliente (app), manteniendo firmware como fuente de datos crudos + flags basicas.
-
