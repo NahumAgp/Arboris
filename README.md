@@ -153,21 +153,21 @@ Cadena `snprintf` real:
 
 `"%d,%u,%lu,%d,%u,%d,%d,%d,%d,%d,%d,%d,%d\n"`
 
-| Pos | Campo   | Tipo | Escala / rango esperado | Descripcion |
-|---|---|---|---|---|
-| 1 | `HS_X10` | `int` | `% suelo * 10` | Humedad de suelo escalada (ej. `610` = `61.0%`). |
-| 2 | `HS_ADC` | `uint` | `0..4095` | ADC crudo de humedad de suelo. |
-| 3 | `LLD` | `uint32` | `0` o `1` | Lluvia digital activa (`1` = lluvia detectada). |
-| 4 | `LLA_X10` | `int` | `% agua calibrado * 10` | Nivel de agua de lluvia AO calibrado (ej. `125` = `12.5%`). |
-| 5 | `LLA_ADC` | `uint` | `0..4095` | ADC crudo de lluvia AO. |
-| 6 | `TA_X10` | `int` | `C * 10` (con signo) | Temperatura ambiente escalada (ej. `222` = `22.2C`, `-30` = `-3.0C`). |
-| 7 | `HA_X10` | `int` | `%RH * 10` | Humedad ambiente escalada (ej. `585` = `58.5%`). |
-| 8 | `AX` | `int` | `int16` | Aceleracion X del MPU6050 (crudo). |
-| 9 | `AY` | `int` | `int16` | Aceleracion Y del MPU6050 (crudo). |
-| 10 | `AZ` | `int` | `int16` | Aceleracion Z del MPU6050 (crudo). |
-| 11 | `GX` | `int` | `int16` | Giroscopio X del MPU6050 (crudo). |
-| 12 | `GY` | `int` | `int16` | Giroscopio Y del MPU6050 (crudo). |
-| 13 | `GZ` | `int` | `int16` | Giroscopio Z del MPU6050 (crudo). |
+| Pos | Campo   | Tipo | Escala / rango esperado | Descripcion | Ejemplo |
+|---|---|---|---|---|---|
+| 1 | `HS_X10` | `int` | `% suelo * 10` | Humedad de suelo escalada (ej. `610` = `61.0%`). | `610` (`61.0%`) |
+| 2 | `HS_ADC` | `uint` | `0..4095` | ADC crudo de humedad de suelo. | `3846` |
+| 3 | `LLD` | `uint32` | `0` o `1` | Lluvia digital activa (`1` = lluvia detectada). | `0` (sin lluvia) |
+| 4 | `LLA_X10` | `int` | `% agua calibrado * 10` | Nivel de agua de lluvia AO calibrado (ej. `125` = `12.5%`). | `125` (`12.5%`) |
+| 5 | `LLA_ADC` | `uint` | `0..4095` | ADC crudo de lluvia AO. | `3842` |
+| 6 | `TA_X10` | `int` | `C * 10` (con signo) | Temperatura ambiente escalada (ej. `222` = `22.2C`, `-30` = `-3.0C`). | `-30` (`-3.0C`) |
+| 7 | `HA_X10` | `int` | `%RH * 10` | Humedad ambiente escalada (ej. `585` = `58.5%`). | `585` (`58.5%`) |
+| 8 | `AX` | `int` | `int16` | Aceleracion X del MPU6050 (crudo). | `8500` |
+| 9 | `AY` | `int` | `int16` | Aceleracion Y del MPU6050 (crudo). | `1500` |
+| 10 | `AZ` | `int` | `int16` | Aceleracion Z del MPU6050 (crudo). | `-13200` |
+| 11 | `GX` | `int` | `int16` | Giroscopio X del MPU6050 (crudo). | `-50` |
+| 12 | `GY` | `int` | `int16` | Giroscopio Y del MPU6050 (crudo). | `140` |
+| 13 | `GZ` | `int` | `int16` | Giroscopio Z del MPU6050 (crudo). | `-160` |
 
 Ejemplo de linea:
 
